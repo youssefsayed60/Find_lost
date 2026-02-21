@@ -15,13 +15,7 @@
                     <p class="subtitle">Help reunite students with their items</p>
                 </div>
             </div>
-            <button class="btn-primary" (click)="openModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Post Found Item
-            </button>
+
         </div>
     </div>
 </header>
@@ -35,8 +29,8 @@
         <button class="tab" data-filter="available" (click)="filterItems('available')">
             Available (<span id="count-available">{{ availableCount }}</span>)
         </button>
-        <button class="tab" data-filter="claimed" (click)="filterItems('claimed')">
-            Claimed (<span id="count-claimed">{{ claimedCount }}</span>)
+        <button class="tab" data-filter="booked" (click)="filterItems('booked')">
+            Booked (<span id="count-claimed">{{ bookedCount }}</span>)
         </button>
     </div>
 </div>
@@ -44,11 +38,11 @@
 <!-- Items Grid -->
 <main class="container main-content">
     <div class="items-grid" id="itemsGrid" *ngIf="filteredItems.length > 0; else emptyState">
-        <div class="item-card" *ngFor="let item of filteredItems">
+        <div class="item-card" *ngFor="let item of filteredItems" (click)="openBookingModal(item)">
             <div class="item-image">
                 <img [src]="item.imageUrl" [alt]="item.name">
-                <div class="claimed-overlay" *ngIf="item.isClaimed">
-                    <span>Claimed</span>
+                <div class="claimed-overlay" *ngIf="item.isBooked">
+                    <span>Booked</span>
                 </div>
             </div>
             <div class="item-content">
@@ -72,27 +66,28 @@
                     <div class="item-detail">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
                         </svg>
                         {{ item.dateFound | date:'MMM d, yyyy' }}
                     </div>
-                    <div class="item-detail" *ngIf="item.isClaimed && item.claimedBy">
+                    <div class="item-detail" *ngIf="item.isBooked && item.bookedBy">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            <path d="M22 11.08V12a10 10 0 1 1-20 0H2v8a2 2 0 0 0 2h16v-2.92a10 10 0 0 1 .83-2.08z"></path>
+                            <polyline points="22 4.12 15.88 2 12 2"></polyline>
                         </svg>
-                        Claimed by {{ item.claimedBy }}
+                        Booked by {{ item.bookedBy }}
                     </div>
                 </div>
+                <div class="item-actions">
+                
                 <button class="claim-btn" 
-                        [class.available]="!item.isClaimed" 
-                        [class.claimed]="item.isClaimed"
-                        (click)="claimItem(item.id)"
-                        [disabled]="item.isClaimed">
-                    {{ item.isClaimed ? 'Claimed' : 'Claim Item' }}
+                        [class.available]="!item.isBooked" 
+                        [class.booked]="item.isBooked"
+                        (click)="openBookingModal(item); $event.stopPropagation()"
+                        [disabled]="item.isBooked">
+                    {{ item.isBooked ? 'Booked' : 'Book Item' }}
                 </button>
+            </div>
             </div>
         </div>
     </div>
@@ -167,5 +162,61 @@
                 <button type="submit" class="btn-primary">Post Item</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal" [class.active]="showBookingModal" id="bookingModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Book Item</h2>
+            <button class="close-btn" (click)="closeBookingModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="booking-item-info" *ngIf="selectedBookingItem">
+                <div class="booking-item-image">
+                    <img [src]="selectedBookingItem.imageUrl" [alt]="selectedBookingItem.name">
+                </div>
+                <div class="booking-item-details">
+                    <h3>{{ selectedBookingItem.name }}</h3>
+                    <p>{{ selectedBookingItem.description }}</p>
+                    <div class="booking-item-meta">
+                        <div class="item-detail">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            {{ selectedBookingItem.location }}
+                        </div>
+                        <div class="item-detail">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            Found by {{ selectedBookingItem.finderName }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form class="booking-form" (ngSubmit)="submitBooking($event)">
+                <div class="form-group">
+                    <label for="bookerName">Your Name *</label>
+                    <input type="text" id="bookerName" [(ngModel)]="bookingForm.bookerName" required placeholder="Your name" name="bookerName">
+                </div>
+                <div class="form-group">
+                    <label for="pickupDate">Pickup Date *</label>
+                    <input type="date" id="pickupDate" [(ngModel)]="bookingForm.pickupDate" required name="pickupDate">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" (click)="closeBookingModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Confirm Booking</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

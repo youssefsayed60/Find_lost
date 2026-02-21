@@ -10,9 +10,9 @@ export interface LostItem {
   finderName: string;
   imageUrl?: string;
   dateFound: Date;
-  isClaimed: boolean;
-  claimedBy?: string;
-  claimedDate?: Date;
+  isBooked: boolean;
+  bookedBy?: string;
+  bookedDate?: Date;
 }
 
 @Component({
@@ -32,7 +32,7 @@ export class LostFoundComponent implements OnInit {
       finderName: 'John Smith',
       imageUrl: 'https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=Water+Bottle',
       dateFound: new Date('2024-01-15'),
-      isClaimed: false
+      isBooked: false
     },
     {
       id: '2',
@@ -42,9 +42,9 @@ export class LostFoundComponent implements OnInit {
       finderName: 'Sarah Johnson',
       imageUrl: 'https://via.placeholder.com/300x200/000000/FFFFFF?text=Backpack',
       dateFound: new Date('2024-01-14'),
-      isClaimed: true,
-      claimedBy: 'Mike Wilson',
-      claimedDate: new Date('2024-01-16')
+      isBooked: true,
+      bookedBy: 'Mike Wilson',
+      bookedDate: new Date('2024-01-16')
     },
     {
       id: '3',
@@ -54,13 +54,19 @@ export class LostFoundComponent implements OnInit {
       finderName: 'Emily Davis',
       imageUrl: 'https://via.placeholder.com/300x200/C0C0C0/000000?text=Watch',
       dateFound: new Date('2024-01-13'),
-      isClaimed: false
+      isBooked: false
     }
   ];
 
   filteredItems: LostItem[] = [...this.items];
   activeFilter: string = 'all';
   showModal: boolean = false;
+  showBookingModal: boolean = false;
+  selectedBookingItem: LostItem | null = null;
+  bookingForm = {
+    bookerName: '',
+    pickupDate: ''
+  };
   selectedImageFile: File | null = null;
   imagePreview: string | null = null;
   formData = {
@@ -77,15 +83,15 @@ export class LostFoundComponent implements OnInit {
   }
 
   get availableCount(): number {
-    return this.items.filter(item => !item.isClaimed).length;
+    return this.items.filter(item => !item.isBooked).length;
   }
 
-  get claimedCount(): number {
-    return this.items.filter(item => item.isClaimed).length;
+  get bookedCount(): number {
+    return this.items.filter(item => item.isBooked).length;
   }
 
   ngOnInit() {
-    // Computed properties will automatically update counts
+    this.loadFromLocalStorage();
   }
 
   filterItems(filter: string) {
@@ -93,10 +99,10 @@ export class LostFoundComponent implements OnInit {
     
     switch (filter) {
       case 'available':
-        this.filteredItems = this.items.filter(item => !item.isClaimed);
+        this.filteredItems = this.items.filter(item => !item.isBooked);
         break;
-      case 'claimed':
-        this.filteredItems = this.items.filter(item => item.isClaimed);
+      case 'booked':
+        this.filteredItems = this.items.filter(item => item.isBooked);
         break;
       default:
         this.filteredItems = [...this.items];
@@ -170,6 +176,61 @@ export class LostFoundComponent implements OnInit {
     this.imagePreview = null;
   }
 
+  openBookingModal(item: LostItem): void {
+    this.selectedBookingItem = item;
+    this.bookingForm = {
+      bookerName: '',
+      pickupDate: ''
+    };
+    this.showBookingModal = true;
+  }
+
+  closeBookingModal(): void {
+    this.showBookingModal = false;
+    this.selectedBookingItem = null;
+    this.bookingForm = {
+      bookerName: '',
+      pickupDate: ''
+    };
+  }
+
+  submitBooking(event: Event): void {
+    event.preventDefault();
+    
+    if (this.selectedBookingItem) {
+      this.selectedBookingItem.isBooked = true;
+      this.selectedBookingItem.bookedBy = this.bookingForm.bookerName;
+      this.selectedBookingItem.bookedDate = new Date(this.bookingForm.pickupDate);
+      
+      // Save to localStorage for persistence
+      this.saveToLocalStorage();
+      
+      this.closeBookingModal();
+      this.filterItems(this.activeFilter);
+    }
+  }
+
+  deleteItem(itemId: string): void {
+    const index = this.items.findIndex(item => item.id === itemId);
+    if (index !== -1) {
+      this.items.splice(index, 1);
+      this.filterItems(this.activeFilter);
+      this.saveToLocalStorage();
+    }
+  }
+
+  saveToLocalStorage(): void {
+    localStorage.setItem('lostFoundItems', JSON.stringify(this.items));
+  }
+
+  loadFromLocalStorage(): void {
+    const saved = localStorage.getItem('lostFoundItems');
+    if (saved) {
+      this.items = JSON.parse(saved);
+      this.filteredItems = [...this.items];
+    }
+  }
+
   handleSubmit(event: Event) {
     event.preventDefault();
     
@@ -181,20 +242,21 @@ export class LostFoundComponent implements OnInit {
       finderName: this.formData.finderName,
       imageUrl: this.imagePreview || 'https://via.placeholder.com/300x200/E5E7EB/6B7280?text=No+Image',
       dateFound: new Date(),
-      isClaimed: false
+      isBooked: false
     };
 
     this.items.unshift(newItem);
     this.filterItems(this.activeFilter);
+    this.saveToLocalStorage();
     this.closeModal();
   }
 
-  claimItem(itemId: string) {
+  bookItem(itemId: string) {
     const item = this.items.find(i => i.id === itemId);
-    if (item && !item.isClaimed) {
-      item.isClaimed = true;
-      item.claimedBy = 'Current User'; // In a real app, this would be the logged-in user
-      item.claimedDate = new Date();
+    if (item && !item.isBooked) {
+      item.isBooked = true;
+      item.bookedBy = 'Current User'; // In a real app, this would be the logged-in user
+      item.bookedDate = new Date();
       this.filterItems(this.activeFilter);
     }
   }
@@ -203,8 +265,8 @@ export class LostFoundComponent implements OnInit {
     switch (this.activeFilter) {
       case 'available':
         return 'No available items at the moment.';
-      case 'claimed':
-        return 'No items have been claimed yet.';
+      case 'booked':
+        return 'No items have been booked yet.';
       default:
         return 'No items have been posted yet.';
     }
