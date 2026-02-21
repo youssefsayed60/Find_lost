@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { LostFoundComponent } from './User/lost-found.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [LostFoundComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

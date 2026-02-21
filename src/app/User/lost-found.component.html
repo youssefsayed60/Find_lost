@@ -1,0 +1,171 @@
+<!-- Header -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Lost Found</h1>
+                    <p class="subtitle">Help reunite students with their items</p>
+                </div>
+            </div>
+            <button class="btn-primary" (click)="openModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Post Found Item
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Filter Tabs -->
+<div class="container">
+    <div class="tabs">
+        <button class="tab active" data-filter="all" (click)="filterItems('all')">
+            All Items (<span id="count-all">{{ allCount }}</span>)
+        </button>
+        <button class="tab" data-filter="available" (click)="filterItems('available')">
+            Available (<span id="count-available">{{ availableCount }}</span>)
+        </button>
+        <button class="tab" data-filter="claimed" (click)="filterItems('claimed')">
+            Claimed (<span id="count-claimed">{{ claimedCount }}</span>)
+        </button>
+    </div>
+</div>
+
+<!-- Items Grid -->
+<main class="container main-content">
+    <div class="items-grid" id="itemsGrid" *ngIf="filteredItems.length > 0; else emptyState">
+        <div class="item-card" *ngFor="let item of filteredItems">
+            <div class="item-image">
+                <img [src]="item.imageUrl" [alt]="item.name">
+                <div class="claimed-overlay" *ngIf="item.isClaimed">
+                    <span>Claimed</span>
+                </div>
+            </div>
+            <div class="item-content">
+                <h3 class="item-title">{{ item.name }}</h3>
+                <p class="item-description">{{ item.description }}</p>
+                <div class="item-details">
+                    <div class="item-detail">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        {{ item.location }}
+                    </div>
+                    <div class="item-detail">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Found by {{ item.finderName }}
+                    </div>
+                    <div class="item-detail">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        {{ item.dateFound | date:'MMM d, yyyy' }}
+                    </div>
+                    <div class="item-detail" *ngIf="item.isClaimed && item.claimedBy">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        Claimed by {{ item.claimedBy }}
+                    </div>
+                </div>
+                <button class="claim-btn" 
+                        [class.available]="!item.isClaimed" 
+                        [class.claimed]="item.isClaimed"
+                        (click)="claimItem(item.id)"
+                        [disabled]="item.isClaimed">
+                    {{ item.isClaimed ? 'Claimed' : 'Claim Item' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <ng-template #emptyState>
+        <div class="empty-state" id="emptyState">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            <h3>No items found</h3>
+            <p>{{ getEmptyMessage() }}</p>
+        </div>
+    </ng-template>
+</main>
+
+<!-- Modal -->
+<div class="modal" [class.active]="showModal" id="postItemModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Post Found Item</h2>
+            <button class="close-btn" (click)="closeModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <form class="modal-body" id="postItemForm" (ngSubmit)="handleSubmit($event)">
+            <div class="form-group">
+                <label for="itemName">Item Name *</label>
+                <input type="text" id="itemName" [(ngModel)]="formData.itemName" required placeholder="e.g., Blue Water Bottle" name="itemName">
+            </div>
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" [(ngModel)]="formData.description" required rows="3" placeholder="Describe the item in detail..." name="description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="location">Location Found *</label>
+                <input type="text" id="location" [(ngModel)]="formData.location" required placeholder="e.g., Library 2nd Floor" name="location">
+            </div>
+            <div class="form-group">
+                <label for="finderName">Your Name *</label>
+                <input type="text" id="finderName" [(ngModel)]="formData.finderName" required placeholder="Your name" name="finderName">
+            </div>
+            <div class="form-group">
+                <label for="itemImage">Upload Image (optional)</label>
+                <div class="image-upload-container">
+                    <input type="file" id="itemImage" (change)="onImageSelected($event)" accept="image/*" name="itemImage">
+                    <div class="image-preview" *ngIf="imagePreview">
+                        <img [src]="imagePreview" alt="Item preview">
+                        <button type="button" class="remove-image-btn" (click)="removeImage()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="upload-placeholder" *ngIf="!imagePreview">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 1"></polyline>
+                        </svg>
+                        <span>Click to upload image</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Post Item</button>
+            </div>
+        </form>
+    </div>
+</div>
