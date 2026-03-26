@@ -1,0 +1,163 @@
+<header class="header">
+  <div class="container">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+        </div>
+        <div>
+          <h1>Lost Found</h1>
+          <p class="subtitle">Help reunite students with their items</p>
+        </div>
+      </div>
+      <div class="header-right">
+          <button class="btn-primary" routerLink="/admin">Admin</button>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab" [class.active]="activeFilter === 'all'" (click)="filterItems('all')">
+      All Items (<span>{{ allCount }}</span>)
+    </button>
+    <button class="tab" [class.active]="activeFilter === 'available'" (click)="filterItems('available')">
+      Available (<span>{{ availableCount }}</span>)
+    </button>
+    <button class="tab" [class.active]="activeFilter === 'booked'" (click)="filterItems('booked')">
+      Booked (<span>{{ bookedCount }}</span>)
+    </button>
+  </div>
+</div>
+
+<main class="container main-content">
+  <div class="items-grid" *ngIf="filteredItems.length > 0; else emptyState">
+    <div class="item-card" *ngFor="let item of filteredItems" (click)="openBookingModal(item)">
+      <div class="item-image">
+        <img [src]="item.photo" [alt]="item.name">
+        <div class="claimed-overlay" *ngIf="item.claimed">
+          <span>Booked</span>
+        </div>
+      </div>
+      <div class="item-content">
+        <h3 class="item-title">{{ item.name }}</h3>
+        <p class="item-description">{{ item.description }}</p>
+        <div class="item-details">
+          <div class="item-detail">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            {{ item.location }}
+          </div>
+          <div class="item-detail">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Found by {{ item.finderName }}
+          </div>
+          <div class="item-detail">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            {{ item.dateFound | date:'MMM d, yyyy' }}
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="claim-btn" 
+                  [class.available]="!item.claimed" 
+                  [class.booked]="item.claimed"
+                  (click)="openBookingModal(item); $event.stopPropagation()"
+                  [disabled]="item.claimed">
+            {{ item.claimed ? 'Booked' : 'Book Item' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <h3>No items found</h3>
+      <p>Try changing your filter or post a new item.</p>
+    </div>
+  </ng-template>
+</main>
+
+<div class="modal" [class.active]="showModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Post Found Item</h2>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    <form class="modal-body" (ngSubmit)="handleSubmit($event)">
+      <div class="form-group">
+        <label>Item Name *</label>
+        <input type="text" [(ngModel)]="formData.itemName" name="itemName" required>
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea [(ngModel)]="formData.description" name="description" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Location Found *</label>
+        <input type="text" [(ngModel)]="formData.location" name="location" required>
+      </div>
+      <div class="form-group">
+        <label>Your Name *</label>
+        <input type="text" [(ngModel)]="formData.finderName" name="finderName" required>
+      </div>
+      <div class="form-group">
+        <label>Image</label>
+        <div class="image-upload-container">
+          <input type="file" (change)="onImageSelected($event)" accept="image/*">
+          <div class="image-preview" *ngIf="imagePreview">
+            <img [src]="imagePreview">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Post Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" [class.active]="showBookingModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Book Item</h2>
+      <button class="close-btn" (click)="closeBookingModal()">×</button>
+    </div>
+    <div class="modal-body" *ngIf="selectedBookingItem">
+      <div class="booking-item-info">
+        <img [src]="selectedBookingItem.photo" [alt]="selectedBookingItem.name" class="booking-img">
+        <h3>{{ selectedBookingItem.name }}</h3>
+        <p>{{ selectedBookingItem.description }}</p>
+      </div>
+      <form class="booking-form" (ngSubmit)="closeBookingModal()">
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input type="text" [(ngModel)]="bookingForm.bookerName" name="bookerName" required>
+        </div>
+        <div class="form-group">
+          <label>Pickup Date *</label>
+          <input type="date" [(ngModel)]="bookingForm.pickupDate" name="pickupDate" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeBookingModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Confirm Booking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

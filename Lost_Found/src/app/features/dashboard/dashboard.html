@@ -1,0 +1,33 @@
+<div class="dashboard-header">
+  <h1>Campus Lost & Found</h1>
+  <button class="post-button" routerLink="/post-item">+ Post Found Item</button>
+    <button class="post-button" routerLink="/student">student</button>
+
+</div>
+
+<div class="tabs">
+  <span>All Items ({{ items.length }})</span>
+  <span>Available ({{ availableCount }})</span>
+  <span>Claimed ({{ claimedCount }})</span>
+</div>
+
+<div class="items-grid">
+  <div class="item-card" *ngFor="let item of items">
+    <div class="item-image" [ngStyle]="{'background-image': item.photo ? 'url(' + item.photo + ')' : 'none'}">
+      <div class="claimed-overlay" *ngIf="item.claimed">CLAIMED</div>
+    </div>
+    <div class="item-info">
+      <h3>{{ item.name }}</h3>
+      <p>{{ item.description }}</p>
+      <p>📍 {{ item.location }}</p>
+      <p>📅 {{ item.dateFound ? (item.dateFound | date:'MMM d, y') : 'N/A' }}</p>
+      <p>👤 Found by {{ item.finderName }}</p>
+      <button 
+        class="claim-button" 
+        [disabled]="item.claimed"
+        (click)="claimItem(item)">
+        {{ item.claimed ? 'Already Claimed' : 'Claim This Item' }}
+      </button>
+    </div>
+  </div>
+</div>

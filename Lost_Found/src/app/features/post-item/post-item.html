@@ -1,0 +1,29 @@
+<div class="form-container">
+  <h2>Post Found Item</h2>
+
+  <form [formGroup]="itemForm" (ngSubmit)="submit()">
+
+    <label>Item Name</label>
+    <input type="text" formControlName="name">
+
+    <label>Description</label>
+    <textarea formControlName="description"></textarea>
+
+    <label>Where Found</label>
+    <input type="text" formControlName="location">
+
+    <label>Your Name</label>
+    <input type="text" formControlName="finderName">
+
+    <label>Date Found</label>
+    <input type="date" formControlName="dateFound">
+
+    <label>Upload Photo</label>
+    <input type="file" (change)="onFileSelected($event)">
+
+    <button type="submit" [disabled]="itemForm.invalid">
+      Post Item
+    </button>
+
+  </form>
+</div>
